@@ -1,0 +1,48 @@
+# analytics-service: MariaDB propia (db_analytics) + la app, conectada al clúster Kafka de kafka-local.
+#   1) en kafka-local:        docker compose up -d
+#   2) en analytics-service:  docker compose up -d --build
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: db_analytics
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-}
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+    # Sin puerto publicado: en el host ya hay un MariaDB en 3306 (usar ese al correr la app fuera de Docker).
+    volumes:
+      - analytics_db_data:/var/lib/mysql
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Se compila dentro de la imagen (Dockerfile multi-stage)
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "8091"
+      DB_URL: jdbc:mariadb://db:3306/db_analytics?createDatabaseIfNotExist=true
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      # Listener interno de los brokers (dentro de la red pcb-kafka-net).
+      KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP:-kafka1:29092,kafka2:29092,kafka3:29092}
+    ports:
+      - "${SERVER_PORT:-8091}:8091"
+    networks:
+      - default
+      - pcb-kafka-net
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  analytics_db_data:
+
+networks:
+  pcb-kafka-net:
+    external: true   # la crea kafka-local/docker-compose.yml
