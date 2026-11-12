@@ -71,7 +71,8 @@ public class EventProcessor {
         switch (e.eventType()) {
             case "ORDER_PAID" -> orderPaid(p);
             case "INSPECTION_COMPLETED" -> {
-                String result = text(p, "result", "SIN_RESULTADO");
+                // reports manda el resultado como inspectionStatus (PASSED / FAILED); se acepta tambien "result".
+                String result = text(p, "result", text(p, "inspectionStatus", "SIN_RESULTADO"));
                 metrics.add(INSPECTION_RESULT, result, result, 1, 0);
             }
             default -> { /* el resto de tipos solo se cuenta por EVENT_TYPE */ }
@@ -95,9 +96,11 @@ public class EventProcessor {
         for (JsonNode item : payload.path("items")) {
             long price = item.path("price").asLong(0);
             String category = text(item, "category", "SIN_CATEGORIA");
+            // La clave es el id de la subcategoria (si viene): asi un renombre no parte las ventas en dos filas.
+            String categoryKey = text(item, "categoryId", category);
             String publicationId = text(item, "publicationId", null);
             String sellerId = text(item, "sellerId", null);
-            metrics.add(CATEGORY, category, category, 1, price);
+            metrics.add(CATEGORY, categoryKey, category, 1, price);
             if (publicationId != null) {
                 metrics.add(PRODUCT, publicationId, text(item, "title", publicationId), 1, price);
             }

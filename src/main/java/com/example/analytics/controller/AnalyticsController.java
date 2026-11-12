@@ -74,7 +74,7 @@ public class AnalyticsController {
         return byAmount(EventProcessor.SELLER, limit);
     }
 
-    /** Resultado de las inspecciones (APPROVED / REJECTED): da la tasa de rechazo. */
+    /** Resultado de las inspecciones (PASSED / FAILED): da la tasa de rechazo. */
     @GetMapping("/analytics/inspections")
     public List<MetricDto> inspections(@RequestHeader(value = AuthContext.USER_ID_HEADER, required = false) String userId,
                                        @RequestHeader(value = AuthContext.ROLE_HEADER, required = false) String role) {

@@ -10,7 +10,7 @@ import jakarta.persistence.UniqueConstraint;
 
 /**
  * Una fila por (tipo de métrica, clave): EVENT_TYPE/ORDER_PAID, CATEGORY/CPU, PRODUCT/<publicationId>,
- * SELLER/<sellerId>, INSPECTION_RESULT/APPROVED... Se actualiza con un upsert atómico (ver MetricRepository).
+ * SELLER/<sellerId>, INSPECTION_RESULT/PASSED... Se actualiza con un upsert atómico (ver MetricRepository).
  */
 @Entity
 @Table(name = "metric", uniqueConstraints = @UniqueConstraint(columnNames = {"metric_type", "dim_key"}))
